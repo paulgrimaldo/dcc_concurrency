@@ -12,11 +12,11 @@ func main() {
 	var size int
 	fmt.Print("Ingrese el tamaño de las matrices aleatorias: ")
 	fmt.Scan(&size)
-	runStaticTests(size)
+	runStaticTests()
 	runRandomTests(size)
 }
 
-func runStaticTests(size int) {
+func runStaticTests() {
 	fmt.Println("Matrices estáticas")
 	A := m.GenerateStaticMatrixA()
 	B := m.GenerateStaticMatrixB()
