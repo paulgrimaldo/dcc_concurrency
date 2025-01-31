@@ -6,13 +6,8 @@ import (
 	"sync"
 )
 
-const (
-	size       = 3
-	numWorkers = 4
-)
-
 func PrintMatrix(matrix [][]int) {
-	if len(matrix) > 10 {
+	if len(matrix) >= 10 {
 		size := len(matrix)
 		fmt.Printf("Matriz de %dx%d \n", size, size)
 		return
@@ -45,7 +40,7 @@ func MultiplyMatricesConcurrent(A, B [][]int, size int) [][]int {
 	tasks := make(chan Task, size)
 	var wg sync.WaitGroup
 
-	for i := 0; i < numWorkers; i++ {
+	for i := 0; i < NumWorkers; i++ {
 		wg.Add(1)
 		go worker(tasks, &wg)
 	}
@@ -56,5 +51,20 @@ func MultiplyMatricesConcurrent(A, B [][]int, size int) [][]int {
 	close(tasks)
 
 	wg.Wait()
+	return result
+}
+
+func MultiplyMatrices(A, B [][]int, size int) [][]int {
+	result := make([][]int, size)
+	for i := range result {
+		result[i] = make([]int, size)
+		for j := range result[i] {
+			sum := 0
+			for k := 0; k < size; k++ {
+				sum += A[i][k] * B[k][j]
+			}
+			result[i][j] = sum
+		}
+	}
 	return result
 }

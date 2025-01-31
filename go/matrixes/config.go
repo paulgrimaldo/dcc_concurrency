@@ -1,3 +1,3 @@
 package matrixes
 
-var NumWorkers = 4
+var NumWorkers = 8

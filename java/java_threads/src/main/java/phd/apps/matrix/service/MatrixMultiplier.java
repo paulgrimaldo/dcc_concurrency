@@ -1,7 +1,9 @@
 package phd.apps.matrix.service;
 
+import java.util.concurrent.ExecutionException;
+
 public interface MatrixMultiplier {
 
-    void multiply(int[][] A, int[][] B, int[][] result);
+    int[][] multiply(int[][] A, int[][] B, int size) throws ExecutionException, InterruptedException;
 }
 

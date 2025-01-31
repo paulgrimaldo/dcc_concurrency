@@ -10,24 +10,43 @@ import (
 
 func main() {
 	var size int
-	fmt.Print("Ingrese el tamaño de las matrices: ")
+	fmt.Print("Ingrese el tamaño de las matrices aleatorias: ")
 	fmt.Scan(&size)
+	runStaticTests(size)
+	runRandomTests(size)
+}
 
-	A := m.GenerateMatrix(size)
-	B := m.GenerateMatrix(size)
-	C := m.GenerateMatrix(size)
-	D := m.GenerateMatrix(size)
+func runStaticTests(size int) {
+	fmt.Println("Matrices estáticas")
+	A := m.GenerateStaticMatrixA()
+	B := m.GenerateStaticMatrixB()
+
 	fmt.Println("Matriz A:")
 	m.PrintMatrix(A)
 
 	fmt.Println("Matriz B:")
 	m.PrintMatrix(B)
 
-	fmt.Println("Matriz C:")
-	m.PrintMatrix(C)
+	fmt.Println("Multiplicando matrices sin paralelismo")
+	start := time.Now()
+	var singleResult = m.MultiplyMatrices(A, B, 10)
+	fmt.Println("Tiempo de ejecución de A * B:", time.Since(start))
+	m.PrintMatrix(singleResult)
 
-	fmt.Println("Matriz D:")
-	m.PrintMatrix(D)
+	fmt.Println("Multiplicando matrices estáticas en paralelo...")
+	start = time.Now()
+	var concurrentResult = m.MultiplyMatricesConcurrent(A, B, 10)
+	fmt.Println("Tiempo de ejecución concurrente de A * B:", time.Since(start))
+	m.PrintMatrix(concurrentResult)
+}
+
+func runRandomTests(size int) {
+	fmt.Println("Matrices generadas aleatoriamente")
+
+	A := m.GenerateMatrix(size)
+	B := m.GenerateMatrix(size)
+	C := m.GenerateMatrix(size)
+	D := m.GenerateMatrix(size)
 
 	fmt.Println("Multiplicando matrices en paralelo...")
 
@@ -52,13 +71,7 @@ func main() {
 	}()
 
 	wg.Wait()
-	fmt.Printf("Tiempo de ejecución concurrente: %d ms \n", time.Since(start).Milliseconds())
-
-	fmt.Println("Resultado de A * B:")
-	m.PrintMatrix(results[0])
-
-	fmt.Println("Resultado de C * D:")
-	m.PrintMatrix(results[1])
+	fmt.Printf("Tiempo de ejecución concurrente (A,B,C,D): %d ms \n", time.Since(start).Milliseconds())
 
 	start = time.Now()
 	finalResult := m.MultiplyMatricesConcurrent(m.MultiplyMatricesConcurrent(A, B, size), C, size)
@@ -66,4 +79,13 @@ func main() {
 
 	fmt.Println("Resultado de (A * B) * C:")
 	m.PrintMatrix(finalResult)
+
+	fmt.Println("-----Comparación concurrente vs local-----")
+	start = time.Now()
+	m.MultiplyMatrices(A, B, size)
+	fmt.Printf("Tiempo de ejecución local: %d ms \n", time.Since(start).Milliseconds())
+
+	start = time.Now()
+	m.MultiplyMatricesConcurrent(A, B, size)
+	fmt.Printf("Tiempo de ejecución concurrente: %d ms \n", time.Since(start).Milliseconds())
 }

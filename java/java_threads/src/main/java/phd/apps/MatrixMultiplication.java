@@ -2,63 +2,107 @@ package phd.apps;
 
 import phd.apps.config.ThreadsConfig;
 import phd.apps.matrix.service.MatrixMultiplier;
+import phd.apps.matrix.service.impl.SimpleMatrixMultiplier;
 import phd.apps.matrix.service.impl.ThreadSafeMatrixMultiplier;
 import phd.apps.matrix.util.MatrixUtil;
 
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 class MatrixMultiplication {
     private static int[][] A;
     private static int[][] B;
     private static int[][] C;
     private static int[][] D;
-    private static int[][] result1;
-    private static int[][] result2;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Ingrese el tamaño de las matrices: ");
+        System.out.print("Ingrese el tamaño de las matrices aleatorias: ");
         int size = scanner.nextInt();
+        runStaticTests();
+        runRandomTests(size);
+    }
 
+    private static void runStaticTests() throws ExecutionException, InterruptedException {
+        System.out.println("Matrices estáticas");
+        A = MatrixUtil.generateMatrixA();
+        B = MatrixUtil.generateMatrixB();
+
+        MatrixUtil.printMatrix("Matriz A:", A);
+        MatrixUtil.printMatrix("Matriz B:", B);
+
+        System.out.println("Multiplicando matrices sin paralelismo");
+        MatrixMultiplier multiplier = new SimpleMatrixMultiplier();
+        long startTime = System.currentTimeMillis();
+        int[][] result = multiplier.multiply(A, B, 10);
+        System.out.println("Tiempo de ejecución de A * B: " + (System.currentTimeMillis() - startTime) + " ms");
+        MatrixUtil.printMatrix("Resultado de A * B", result);
+
+        System.out.println("Multiplicando matrices estáticas en paralelo");
+        MatrixMultiplier simpleMultiplier = new ThreadSafeMatrixMultiplier(ThreadsConfig.NUM_THREADS);
+        startTime = System.currentTimeMillis();
+        result = simpleMultiplier.multiply(A, B, 10);
+        System.out.println("Tiempo de ejecución concurrente de A * B: " + (System.currentTimeMillis() - startTime) + " ms");
+        MatrixUtil.printMatrix("Resultado de A * B", result);
+    }
+
+    private static void runRandomTests(int size) throws InterruptedException, ExecutionException {
+        System.out.println("Matrices generadas aleatoriamente");
         A = MatrixUtil.generateMatrix(size);
         B = MatrixUtil.generateMatrix(size);
         C = MatrixUtil.generateMatrix(size);
         D = MatrixUtil.generateMatrix(size);
-        result1 = new int[size][size];
-        result2 = new int[size][size];
 
         System.out.println("Multiplicando matrices en paralelo...");
-        MatrixMultiplier multiplier = new ThreadSafeMatrixMultiplier(ThreadsConfig.NUM_THREADS, size);
+        MatrixMultiplier concurrentMultiplier = new ThreadSafeMatrixMultiplier(ThreadsConfig.NUM_THREADS);
 
         int[][] tmpResult1 = new int[size][size];
-
         long startTime = System.currentTimeMillis();
-        multiplier.multiply(A, B, tmpResult1);
-
         System.out.println("Tiempo de ejecución concurrente individual de A * B: " + (System.currentTimeMillis() - startTime) + " ms");
         MatrixUtil.printMatrix("Resultado de A * B", tmpResult1);
 
         startTime = System.currentTimeMillis();
-        Thread t1 = new Thread(() -> multiplier.multiply(A, B, result1));
-        Thread t2 = new Thread(() -> multiplier.multiply(C, D, result2));
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        Future<?> future1 = executorService.submit(() -> {
+            try {
+                concurrentMultiplier.multiply(A, B, size);
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        Future<?> future2 = executorService.submit(() -> {
+            try {
+                concurrentMultiplier.multiply(C, D, size);
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
-        t1.start();
-        t2.start();
+        future1.get();
+        future2.get();
 
-        t1.join();
-        t2.join();
+        executorService.shutdown();
 
-        System.out.println("Tiempo de ejecución concurrente: " + (System.currentTimeMillis() - startTime) + " ms");
-        MatrixUtil.printMatrix("Resultado de A * B", result1);
-        MatrixUtil.printMatrix("Resultado de C * D", result2);
+        System.out.println("Tiempo de ejecución concurrente (A,B,C,D): " + (System.currentTimeMillis() - startTime) + " ms");
 
-        int[][] finalResult = new int[size][size];
         startTime = System.currentTimeMillis();
-
-        multiplier.multiply(A, B, result1);
-        multiplier.multiply(result1, C, finalResult);
+        int[][] finalResult = concurrentMultiplier.multiply(concurrentMultiplier.multiply(A, B, size), C, size);
 
         System.out.println("Tiempo de ejecución para (A*B)*C: " + (System.currentTimeMillis() - startTime) + " ms");
         MatrixUtil.printMatrix("Resultado de (A * B) * C", finalResult);
+
+        System.out.println("-----Comparación concurrente vs local-----");
+        startTime = System.currentTimeMillis();
+        MatrixMultiplier simpleMultiplier = new SimpleMatrixMultiplier();
+        simpleMultiplier.multiply(A, B, size);
+        System.out.println("Tiempo de ejecución local: " + (System.currentTimeMillis() - startTime) + " ms");
+        System.out.println();
+
+        startTime = System.currentTimeMillis();
+        concurrentMultiplier.multiply(A, B, size);
+        System.out.println("Tiempo de ejecución concurrente: " + (System.currentTimeMillis() - startTime) + " ms");
     }
 }
