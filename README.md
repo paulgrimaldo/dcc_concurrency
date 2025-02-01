@@ -41,3 +41,13 @@ concurrency_examples/
 - `java/`: Contiene ejemplos de concurrencia en Java.
 
 Cada carpeta contiene un archivo `README.md` con instrucciones específicas sobre cómo compilar y ejecutar los ejemplos en ese lenguaje.
+
+## Ramas adicionales
+
+`feature/dynamic_matrixes` Es una rama en la que se permite trabajar con matrices de distintas dimensiones, para cumplir la siguiente Regla 
+
+```
+A(mxn) * B(n*q) = R(mxq) 
+```
+
+Se permite la lectura de 3 variables por consola `m,n & q` y ejecuta las mismas operaciones de multiplicación.
