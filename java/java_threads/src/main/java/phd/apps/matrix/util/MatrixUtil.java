@@ -7,12 +7,12 @@ public class MatrixUtil {
         //Do nothing on purpose
     }
 
-    public static int[][] generateMatrix(int size) {
-        Random rand = new Random();
-        int[][] matrix = new int[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                matrix[i][j] = rand.nextInt(10);
+    public static int[][] generateMatrix(int rows, int cols) {
+        int[][] matrix = new int[rows][cols];
+        Random random = new Random();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                matrix[i][j] = random.nextInt(10);
             }
         }
         return matrix;
@@ -50,7 +50,7 @@ public class MatrixUtil {
 
     public static void printMatrix(String message, int[][] matrix) {
         if (matrix[0].length >= 10) {
-            System.out.printf("Matriz de %d x %d%n", matrix[0].length, matrix[0].length);
+            System.out.printf("Matriz de %d x %d%n", matrix.length, matrix[0].length);
             return;
         }
         System.out.println(message);

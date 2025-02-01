@@ -19,16 +19,16 @@ public class ThreadSafeMatrixMultiplier implements MatrixMultiplier {
     }
 
     @Override
-    public int[][] multiply(int[][] A, int[][] B, int size) throws ExecutionException, InterruptedException {
-        int[][] result = new int[size][size];
+    public int[][] multiply(int[][] A, int[][] B, int m, int n, int q) throws ExecutionException, InterruptedException {
+        int[][] result = new int[m][q];
         ExecutorService executor = Executors.newFixedThreadPool(this.numThreads);
-        List<Future<Void>> futures = new ArrayList<>();
+        List<Future<Void>> futures = new ArrayList<>(m*q);
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < m; i++) {
             final int row = i;
             futures.add(executor.submit(() -> {
-                for (int j = 0; j < size; j++) {
-                    for (int k = 0; k < size; k++) {
+                for (int j = 0; j < q; j++) {
+                    for (int k = 0; k < n; k++) {
                         result[row][j] += A[row][k] * B[k][j];
                     }
                 }

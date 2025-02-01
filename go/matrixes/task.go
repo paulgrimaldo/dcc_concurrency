@@ -5,4 +5,5 @@ type Task struct {
 	Size   int
 	A, B   [][]int
 	Result [][]int
+	Cols   int
 }

@@ -5,55 +5,60 @@ import (
 	"sync"
 	"time"
 
-	m "github.com/paulgrimaldo/concurrency_examples/go/matrixes"
+	mt "github.com/paulgrimaldo/concurrency_examples/go/matrixes"
 )
 
 func main() {
-	var size int
-	fmt.Print("Ingrese el tamaño de las matrices aleatorias: ")
-	fmt.Scan(&size)
+	fmt.Println("Calculo para la multiplicación de matrices A(mxn) * B (nxq)")
+	var m, n, q int
+	fmt.Print("Ingrese el número de filas de la matriz A (m):")
+	fmt.Scan(&m)
+	fmt.Print("Ingrese el número de columnas de la matriz A y filas de la matriz B (n):")
+	fmt.Scan(&n)
+	fmt.Print("Ingrese el número de columnas de la matriz B (q):")
+	fmt.Scan(&q)
 	runStaticTests()
-	runRandomTests(size)
+	runRandomTests(m, n, q)
 }
 
 func runStaticTests() {
 	fmt.Println("Matrices estáticas")
-	A := m.GenerateStaticMatrixA()
-	B := m.GenerateStaticMatrixB()
+	A := mt.GenerateStaticMatrixA()
+	B := mt.GenerateStaticMatrixB()
 
 	fmt.Println("Matriz A:")
-	m.PrintMatrix(A)
+	mt.PrintMatrix(A)
 
 	fmt.Println("Matriz B:")
-	m.PrintMatrix(B)
+	mt.PrintMatrix(B)
 
 	fmt.Println("Multiplicando matrices sin paralelismo")
 	start := time.Now()
-	var singleResult = m.MultiplyMatrices(A, B, 10)
+	var singleResult = mt.MultiplyMatrices(A, B, 10, 10, 10)
 	fmt.Println("Tiempo de ejecución de A * B:", time.Since(start))
-	m.PrintMatrix(singleResult)
+	mt.PrintMatrix(singleResult)
 
 	fmt.Println("Multiplicando matrices estáticas en paralelo...")
 	start = time.Now()
-	var concurrentResult = m.MultiplyMatricesConcurrent(A, B, 10)
+	var concurrentResult = mt.MultiplyMatricesConcurrent(A, B, 10, 10, 10)
 	fmt.Println("Tiempo de ejecución concurrente de A * B:", time.Since(start))
-	m.PrintMatrix(concurrentResult)
+	mt.PrintMatrix(concurrentResult)
 }
 
-func runRandomTests(size int) {
+func runRandomTests(m, n, q int) {
 	fmt.Println("Matrices generadas aleatoriamente")
 
-	A := m.GenerateMatrix(size)
-	B := m.GenerateMatrix(size)
-	C := m.GenerateMatrix(size)
-	D := m.GenerateMatrix(size)
+	A := mt.GenerateMatrix(m, n)
+	B := mt.GenerateMatrix(n, q)
+	C := mt.GenerateMatrix(q, n)
+	D := mt.GenerateMatrix(n, q)
 
 	fmt.Println("Multiplicando matrices en paralelo...")
 
 	start := time.Now()
-	var singleResult = m.MultiplyMatricesConcurrent(A, B, size)
+	var singleResult = mt.MultiplyMatricesConcurrent(A, B, m, n, q)
 	fmt.Printf("Tiempo de ejecución concurrente individual de A * B: %d ms \n", time.Since(start).Milliseconds())
-	m.PrintMatrix(singleResult)
+	mt.PrintMatrix(singleResult)
 
 	var wg sync.WaitGroup
 	results := make([][][]int, 2)
@@ -63,29 +68,29 @@ func runRandomTests(size int) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		results[0] = m.MultiplyMatricesConcurrent(A, B, size)
+		results[0] = mt.MultiplyMatricesConcurrent(A, B, m, n, q)
 	}()
 	go func() {
 		defer wg.Done()
-		results[1] = m.MultiplyMatricesConcurrent(C, D, size)
+		results[1] = mt.MultiplyMatricesConcurrent(C, D, m, n, q)
 	}()
 
 	wg.Wait()
 	fmt.Printf("Tiempo de ejecución concurrente (A,B,C,D): %d ms \n", time.Since(start).Milliseconds())
 
 	start = time.Now()
-	finalResult := m.MultiplyMatricesConcurrent(m.MultiplyMatricesConcurrent(A, B, size), C, size)
+	finalResult := mt.MultiplyMatricesConcurrent(mt.MultiplyMatricesConcurrent(A, B, m, n, q), C, m, q, n)
 	fmt.Printf("Tiempo de ejecución para (A*B)*C: %d ms \n", time.Since(start).Milliseconds())
 
 	fmt.Println("Resultado de (A * B) * C:")
-	m.PrintMatrix(finalResult)
+	mt.PrintMatrix(finalResult)
 
 	fmt.Println("-----Comparación concurrente vs local-----")
 	start = time.Now()
-	m.MultiplyMatrices(A, B, size)
+	mt.MultiplyMatrices(A, B, m, n, q)
 	fmt.Printf("Tiempo de ejecución local: %d ms \n", time.Since(start).Milliseconds())
 
 	start = time.Now()
-	m.MultiplyMatricesConcurrent(A, B, size)
+	mt.MultiplyMatricesConcurrent(A, B, m, n, q)
 	fmt.Printf("Tiempo de ejecución concurrente: %d ms \n", time.Since(start).Milliseconds())
 }
