@@ -30,6 +30,12 @@ java_threads/
     - Existen 2 implementaciones de `MatrixMultiplier`, la primera `SimpleMatrixMultiplier` que es una multiplicación convencional. Y la segunda `ThreadSafeMatrixMultiplier` que separa la operación utilizando `ExecutorService` de acuerdo al número de hilos configurados en `ThreadsConfig`.
 - `MatrixMultiplication` es el punto de entrada de la aplicación, solicita por consola el número de filas y columnas para las matrices aleatorias, mediante un solo número, dado que se realizan los ejemplos con matrices cuadradas. 
 
+# Detalles del funcionamiento de la arquitectura
+
+Se paralelizan las operaciones para multiplicar matrices, se recorre cada fila de una matriz y las operaciones que corresponden a las columnas se las van agregando a un pool con hilos, gestionados mediante un `ExecutorService` para mejor eficiencia.
+
+Se envia a completar todos los hilos con los calculos pendientes y se devuelve el resultado en una nueva matriz. 
+
 ## Instrucciones para Compilar y Ejecutar (Primer enfoque)
 
 1. Asegúrate de tener Java Development Kit (JDK) instalado en tu sistema. Puedes descargarlo desde [oracle.com](https://www.oracle.com/java/technologies/javase-downloads.html).

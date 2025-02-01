@@ -21,6 +21,12 @@ Este directorio contiene ejemplos de concurrencia en Go.
     - `task.go` declaración de un `struct` a modo de apoyo para los `worker`. 
     - `matrix.go` contiene las operaciones de multiplicación concurrente y no concurrente así como utilitarios para mostrar en consola. 
 
+# Detalles del funcionamiento de la arquitectura
+
+Se paralelizan las operaciones para multiplicar matrices, se recorre cada fila de una matriz y las operaciones que corresponden a las columnas se las van agregando a un canal `chan` a través de una `task` que contiene información de la matriz, la fila y donde dejar el resultado. 
+
+Se envia a completar todos las `tasks` con los calculos pendientes y se devuelve el resultado en una nueva matriz. 
+
 ## Instrucciones para Compilar y Ejecutar (Primer enfoque)
 
 1. Asegúrate de tener Go instalado en tu sistema. Puedes descargarlo desde [golang.org](https://golang.org/).

@@ -59,13 +59,13 @@ class MatrixMultiplication {
         System.out.println("Multiplicando matrices en paralelo...");
         MatrixMultiplier concurrentMultiplier = new ThreadSafeMatrixMultiplier(ThreadsConfig.NUM_THREADS);
 
-        int[][] tmpResult1 = new int[size][size];
         long startTime = System.currentTimeMillis();
+        int[][] tmpResult1 = concurrentMultiplier.multiply(A, B, size);
         System.out.println("Tiempo de ejecución concurrente individual de A * B: " + (System.currentTimeMillis() - startTime) + " ms");
         MatrixUtil.printMatrix("Resultado de A * B", tmpResult1);
 
-        startTime = System.currentTimeMillis();
         ExecutorService executorService = Executors.newFixedThreadPool(2);
+        startTime = System.currentTimeMillis();
         Future<?> future1 = executorService.submit(() -> {
             try {
                 concurrentMultiplier.multiply(A, B, size);
